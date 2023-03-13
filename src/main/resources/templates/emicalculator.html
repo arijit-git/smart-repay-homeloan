@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Loan Interest Calculator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <!--<link data-th-href="@{/css/bootstrap.min.css}" rel="stylesheet">-->
+  <link data-th-href="@{/css/main.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+  <div style="margin-bottom: 80px;">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+      <a class="navbar-brand" href="#"><span class="badge badge-info">Wah ! Finance</span></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item ">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">EMI Calculator <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/loanplans">Loan Plans</span></a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              EMI
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" href="#">EMI Schedules</a>
+              <a class="dropdown-item" href="#">EMI Alerts</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#">Others</a>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/about">About</a>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
+  </div>
+  <div class="row" id="c-emi-calculator">
+    <div class="col-sm-6">
+      <h1>Loan EMI Calculator</h1>
+      <form id="emi-form" action="http://localhost:8080/calculate" method="post">
+        <div class="form-group">
+          <label for="loan-amount">Loan Amount:</label>
+          <input type="number" class="form-control" id="loan-amount" placeholder="Enter loan amount"
+                 required>
+        </div>
+        <div class="form-group">
+          <label for="loan-tenure">Loan Tenure (in years):</label>
+          <input type="number" class="form-control" id="loan-tenure" placeholder="Enter loan tenure"
+                 required>
+        </div>
+        <div class="form-group">
+          <label for="interest-rate">Interest Rate (per annum):</label>
+          <input type="number" step=".01" class="form-control" id="interest-rate"
+                 placeholder="Enter interest rate"
+                 required>
+        </div>
+        <div class="container" style="margin-bottom: 20px;">
+          <a href="#advanced" data-toggle="collapse">Advanced Options ...</a>
+          <div id="advanced" class="collapse">
+            <div class="form-group">
+              <label for="yearly-prepayment">No of extra EMI (per annum):</label>
+              <input type="number" class="form-control" id="yearly-prepayment"
+                     placeholder="Enter no of extra monthly EMI">
+            </div>
+            <div class="form-group">
+              <label for="increase-percentage">Percentage Increase of EMI (per annum):</label>
+              <input type="number" step=".01" class="form-control" id="increase-percentage"
+                     placeholder="Enter % increase of EMI amount per annum">
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-outline-success" id="calculate-emi-button">Calculate EMI
+        </button>
+        <button type="reset" class="btn btn-outline-danger" id="calculate-emi-reset-button">Reset</button>
+      </form>
+    </div>
+    <div class="col-sm-6" id="emi-result">
+      <h1 style="color: #1e7e34">Loan EMI Result</h1>
+      <label style="font-size: large">Monthly EMI </label>
+      <p style="color: #1e7e34; font-size: x-large" id="monthly-emi">0</p>
+      <label>Principal Amount </label>
+      <p style="color: #1e7e34; font-size: x-large" id="principal-amount">0</p>
+      <label>Total Interest Paid </label>
+      <p id="interest-paid" style="color: #1e7e34; font-size: x-large">0</p>
+      <label>Months required to pay off the loan </label>
+      <p id="months-count" style="color: #1e7e34; font-size: x-large">0</p>
+    </div>
+  </div>
+</div>
+
+<!-- footer -->
+<div th:replace="~{footer.html}"></div>
+
+<script>
+  $(document).ready(function () {
+    $("#calculate-emi-reset-button").click(function () {
+      $("#monthly-emi").html(0);
+      $("#principal-amount").html(0);
+      $("#interest-paid").html(0);
+      $("#months-count").html(0);
+    });
+  });
+
+  $("#emi-form").on('submit', function () {
+    event.preventDefault();
+
+    var loanAmount = parseFloat($("#loan-amount").val());
+    var loanTenure = parseInt($("#loan-tenure").val());
+    var interestRate = parseFloat($("#interest-rate").val());
+    var yearlyEMIPrePaymentCount = parseFloat($("#yearly-prepayment").val());
+    var percentageIncreaseEMI = parseFloat($("#increase-percentage").val());
+    var jsonData = {
+      "amount": loanAmount,
+      "tenure": loanTenure,
+      "interestRate": interestRate,
+      "noOfYearlyEmiPrepayment": yearlyEMIPrePaymentCount,
+      "yearlyEmiIncreasePercentage": percentageIncreaseEMI
+    };
+
+    var emi_amount = 0;
+    var principal_amount = 0;
+    var total_interest_paid = 0;
+    var loan_closure_months_count = 0;
+    $.ajax({
+      type: "POST",
+      url: "http://localhost:8080/calculate",
+      data: JSON.stringify(jsonData),
+      contentType: "application/json",
+      dataType: "json",
+      success: function (response) {
+        console.log("Data sent successfully!");
+        console.log(response);
+        // response = JSON.parse(response);
+        emi_amount = response.emi_amount;
+        principal_amount = response.principal_amount;
+        total_interest_paid = response.total_interest_paid;
+        loan_closure_months_count = response.loan_closure_months_count;
+        console.log(emi_amount + '-' + principal_amount + '-' + total_interest_paid + '-' + loan_closure_months_count);
+
+        $("#monthly-emi").html(emi_amount);
+        $("#principal-amount").html(principal_amount);
+        $("#interest-paid").html(total_interest_paid);
+        $("#months-count").html(loan_closure_months_count);
+
+        /*$("#emi-amount").html(
+            "<lablel>Monthly EMI Amount : </lablel><h3>" + emi_amount + "</h3>" +
+            "<lablel>Principal Amount  : </lablel><h3>" + principal_amount + "</h3>" +
+            "<lablel>Total Interest Paid : </lablel><h3>" + total_interest_paid + "</h3>" +
+            "<lablel>Months required to pay off the loan : </lablel><h3>" + loan_closure_months_count + "</h3>"
+        );*/
+        $("#emi-result").show();
+
+      },
+      error: function (xhr, status, error) {
+        console.error(error);
+      }
+    });
+  });
+</script>
+</body>
+</html>

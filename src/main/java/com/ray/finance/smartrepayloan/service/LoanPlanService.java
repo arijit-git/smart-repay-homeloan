@@ -58,7 +58,8 @@ class LoanPlanService {
         double rate = request.getInterestRate();
         double pv = request.getAmount();
         int prepayCount = request.getNoOfYearlyEmiPrepayment();
-
+        double emiIncreasePercentage = request.getYearlyEmiIncreasePercentage();
+        //log.info("==> EMI increase % = {}", emiIncreasePercentage);
         rate = rate / (12 * 100);
         int nper = request.getTenure() * 12;
         int startPeriod = 1;
@@ -71,32 +72,50 @@ class LoanPlanService {
         // calculate emi
         var emi = round(-pmt(rate, nper, pv), 2);
         double outstanding = pv;
-        log.info("First Outstanding = {}", outstanding);
-        log.info("First EMI = {}", emi);
+        //log.info("First Outstanding = {}", outstanding);
+        //log.info("First EMI = {}", emi);
         // calculate cumulative interest paid
         double prepayment = prepayCount * emi;
         boolean prepaymentPaid = false;
+        boolean increaseEmi = false;
+
         for (int i = startPeriod; i <= endPeriod; i++) {
-            log.info("Installment ==> {}", i);
-            log.info("Current Outstanding Before deduction = {}", round(outstanding, 0));
+            //log.info("Installment ==> {}", i);
+            //log.info("Current Outstanding Before deduction = {}", round(outstanding, 0));
             if (outstanding > 0) {
+                if(increaseEmi){
+                    emi += emi * (emiIncreasePercentage/100);
+                    log.info("==> EMI increased = {}", emi);
+                    increaseEmi = false;
+                }
                 towardsInterest = (outstanding * rate);
                 towardsPrincipal = (emi - towardsInterest);
                 totalInterestPaid += towardsInterest;
+
                 if(prepaymentPaid){
                     outstanding = outstanding - prepayment;
                     prepaymentPaid = false;
                 }
                 outstanding -= towardsPrincipal;
-                log.info("Towards Principal = {}", towardsPrincipal);
-                log.info("Towards Interest = {}", towardsInterest);
+                //log.info("Towards Principal = {}", towardsPrincipal);
+               // log.info("Towards Interest = {}", towardsInterest);
+                // each year adjustments
                 var mod  = i % 12;
-                if(prepayCount != 0 && mod == 0){
-                    log.info("===> Prepayment = {}", prepayment);
-                    prepaymentPaid = true;
+                if (mod == 0){
+                    if(prepayCount != 0){
+                        log.info("===> Prepayment = {}, installment_no = {}", prepayment, installmentCount);
+                        prepaymentPaid = true;
+                    }
+                    if(emiIncreasePercentage != 0){
+                        log.info("===> EMI increase request for = {} %, installment_no = {}", emiIncreasePercentage, installmentCount);
+                        increaseEmi = true;
+                    }
                 }
-                log.info("Current Outstanding After deduction = {}", round(outstanding, 0));
+
+                //log.info("Current Outstanding After deduction = {}", round(outstanding, 0));
                 installmentCount++;
+            }else {
+                break;
             }
         }
         log.info("Installment count = {}", installmentCount);
@@ -104,10 +123,10 @@ class LoanPlanService {
         log.info("Total Interest Paid = {}", totalInterest);
         // send response
         LoanRepaymentPlan res = LoanRepaymentPlan.builder()
-                .principal(pv)
-                .interestPaid(totalInterest)
-                .emi(round(emi, 2))
-                .emiCount(installmentCount)
+                .principal_amount(pv)
+                .total_interest_paid(totalInterest)
+                .emi_amount(round(emi, 2))
+                .loan_closure_months_count(installmentCount)
                 .build();
 
         return Mono.just(res);
