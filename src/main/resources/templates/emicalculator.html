@@ -6,7 +6,6 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-  <!--<link data-th-href="@{/css/bootstrap.min.css}" rel="stylesheet">-->
   <link data-th-href="@{/css/main.css}" rel="stylesheet">
 </head>
 <body>
@@ -56,7 +55,7 @@
   <div class="row" id="c-emi-calculator">
     <div class="col-sm-6">
       <h1>Loan EMI Calculator</h1>
-      <form id="emi-form" action="http://localhost:8080/calculate" method="post">
+      <form id="emi-form" action="/calculate" method="post">
         <div class="form-group">
           <label for="loan-amount">Loan Amount:</label>
           <input type="number" class="form-control" id="loan-amount" placeholder="Enter loan amount"
@@ -140,9 +139,11 @@
     var principal_amount = 0;
     var total_interest_paid = 0;
     var loan_closure_months_count = 0;
+    var form = $(this);
+    var actionUrl = form.attr('action');
     $.ajax({
       type: "POST",
-      url: "http://localhost:8080/calculate",
+      url: actionUrl,
       data: JSON.stringify(jsonData),
       contentType: "application/json",
       dataType: "json",
