@@ -11,6 +11,7 @@
 	<groupId>com.ray.finance</groupId>
 	<artifactId>smart-repay-loan</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>smart-repay-loan</name>
 	<description>smart-repay-loan</description>
 	<properties>
