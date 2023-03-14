@@ -78,7 +78,7 @@ class LoanPlanHandler {
 
     public Mono<ServerResponse> calculate(ServerRequest req) {
         return req.bodyToMono(LoanPlan.class)
-                //.flatMap(loanPlanService::createLoanPlan)
+                .flatMap(loanPlanService::createLoanPlan)
                 .flatMap(plan -> Mono.just(loanPlanService.getRepaymentPlan(plan)))
                 .flatMap(plan -> ServerResponse.ok().body(plan, LoanRepaymentPlan.class));
     }
