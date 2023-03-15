@@ -1,11 +1,13 @@
 # smart-repay-homeloan
 A project for repaying loan smartly and track the progress
 
-
 # Technologies
 - Spring Boot Reactive (WebFlux)
 - Postgres DB for backend
 - Thymeleaf for UI
+
+# Workflow
+Sample workflow for Azure WebApp deployment
 
 # Features
 - Calculate loan EMI
